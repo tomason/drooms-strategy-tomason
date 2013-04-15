@@ -1,0 +1,145 @@
+package org.drooms.strategy.tomason.stopwatch 
+
+import java.math.BigInteger
+
+import org.slf4j.Logger
+import java.util.Random
+import java.util.ArrayList
+import org.drooms.api.Move
+import org.drooms.api.Node
+import org.drooms.impl.logic.PathTracker
+import org.drooms.impl.logic.facts.Positioned
+import org.drooms.impl.logic.facts.CurrentTurn
+import org.drooms.impl.logic.facts.CurrentPlayer
+import org.drooms.impl.logic.events.PlayerMoveEvent
+import org.drooms.impl.logic.events.PlayerDeathEvent
+import org.drooms.impl.logic.events.CollectibleRemovalEvent
+import org.drooms.impl.logic.events.CollectibleAdditionEvent
+import org.drooms.strategy.tomason.components.Functions
+import org.drooms.strategy.tomason.components.PriorityMove
+import org.drooms.strategy.tomason.components.status.Score
+import org.drooms.strategy.tomason.components.status.Status
+import org.drooms.strategy.tomason.components.status.WormHead
+import org.drooms.strategy.tomason.components.history.PastMove
+import org.drooms.strategy.tomason.components.collectibles.PositionedCollectible
+import org.drooms.strategy.tomason.rules.StopWatchRules.TimeHolder
+import org.drooms.strategy.tomason.components.status.StopProcessing
+
+global Logger logger
+global PathTracker tracker
+
+declare PlayerMoveEvent
+    @role( event )
+
+end
+
+declare PlayerDeathEvent
+    @role( event )
+
+end
+
+declare CollectibleAdditionEvent
+    @role( event )
+
+end
+
+declare CollectibleRemovalEvent
+    @role( event )
+
+end
+
+
+rule "Start the clock"
+    salience Integer.MAX_VALUE
+when
+    CurrentTurn( $turn : number )  
+then
+	insert(new TimeHolder(System.currentTimeMillis(), $turn));
+end
+
+rule "Print the time"
+    salience Integer.MAX_VALUE
+when
+    PastMove( $turn : turn )  
+    $holder : TimeHolder( turn == $turn )  
+then
+	logger.warn("Time for turn {}: {} ms", $turn, $holder.getDelta(System.currentTimeMillis()));
+	retract($holder);
+end
+
+
+
+rule "Insert indicator of a turn"
+    salience Integer.MAX_VALUE
+when
+    CurrentTurn( )
+then
+	logger.warn("Inserting StopProcessing object");
+	insert(new StopProcessing());
+end
+
+
+
+rule "Stop processing after 900 miliseconds"
+    timer (int: 900 0)
+    salience 100000
+when
+    $obj : StopProcessing( turn < 0 )
+    CurrentTurn( $turn : number )
+    not( StopProcessing(turn == $turn) )
+then
+	logger.warn("Modifying StopProcessing object turn='{}'", $turn);
+
+	modify($obj) {
+		setTurn($turn);
+	}
+end
+
+rule "Insert counter"
+    salience Integer.MAX_VALUE
+    when
+    then
+        insert(BigInteger.ZERO);
+end
+
+rule "Update counter"
+    salience Integer.MAX_VALUE
+    timer(int: 0 100)
+    when
+        $time : BigInteger()
+    then
+        retract($time);
+        insert($time.add(new BigInteger("100")));
+end
+
+rule "Print counter"
+    when
+        $time : BigInteger()
+    then
+        System.out.println($time);
+end
+
+query "canProcess"
+    CurrentTurn( $turn : number )  
+    not StopProcessing( turn == $turn )
+end
+
+rule "retract string"
+    salience -10000
+when
+    CurrentTurn( $turn : number )
+    not StopProcessing( turn == $turn )
+    $s : String(  )
+then
+	retract($s);
+end
+
+rule "insert string"
+    salience -10000
+when
+    CurrentTurn( $turn : number )  
+    not StopProcessing( turn == $turn )
+    not String(  )
+then
+	insert(new String());
+end

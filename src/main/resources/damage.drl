@@ -1,0 +1,24 @@
+package org.drooms.strategy.tomason.collision
+
+import org.slf4j.Logger
+
+import org.drooms.strategy.tomason.components.collectibles.*
+import org.drooms.strategy.tomason.components.collision.*;
+import org.drooms.strategy.tomason.components.history.*
+import org.drooms.strategy.tomason.components.status.*
+import org.drooms.strategy.tomason.components.*
+
+import org.drooms.api.*
+import org.drooms.impl.logic.*
+import org.drooms.impl.logic.facts.*
+import org.drooms.impl.logic.events.*
+
+global Logger logger
+
+rule "Block enemy two steps behind"
+    when
+        Status($x : x, $y : y)
+        Enemy( x )
+    then
+    
+end
