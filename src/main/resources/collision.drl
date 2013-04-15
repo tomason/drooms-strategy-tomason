@@ -1,6 +1,8 @@
 package org.drooms.strategy.tomason.collision
 
 import org.slf4j.Logger
+import java.util.ArrayList
+import java.util.Random
 
 import org.drooms.strategy.tomason.components.collectibles.*
 import org.drooms.strategy.tomason.components.collision.*;
@@ -13,7 +15,15 @@ import org.drooms.impl.logic.*
 import org.drooms.impl.logic.facts.*
 import org.drooms.impl.logic.events.*
 
+import org.drools.runtime.rule.FactHandle
+import org.drools.runtime.rule.WorkingMemoryEntryPoint
+
 global Logger logger
+global PathTracker tracker
+
+declare entry-point gameEvents end
+declare entry-point rewardEvents end
+declare entry-point playerEvents end
 
 
 rule "Insert wall obstacles"

@@ -1,0 +1,66 @@
+package org.drooms.strategy.tomason.collectibles
+
+import org.slf4j.Logger
+import java.util.ArrayList
+import java.util.Random
+
+import org.drooms.strategy.tomason.components.collectibles.*
+import org.drooms.strategy.tomason.components.collision.*;
+import org.drooms.strategy.tomason.components.history.*
+import org.drooms.strategy.tomason.components.status.*
+import org.drooms.strategy.tomason.components.*
+
+import org.drooms.api.*
+import org.drooms.impl.logic.*
+import org.drooms.impl.logic.facts.*
+import org.drooms.impl.logic.events.*
+
+import org.drools.runtime.rule.FactHandle
+import org.drools.runtime.rule.WorkingMemoryEntryPoint
+
+global Logger logger
+global PathTracker tracker
+
+declare entry-point gameEvents end
+declare entry-point rewardEvents end
+declare entry-point playerEvents end
+
+
+rule "Receive collectible"
+    salience 100
+    when
+        CollectibleAdditionEvent($col : collectible, $node : node) from entry-point gameEvents
+    then
+        insert(new PositionedCollectible($col, $node));
+end
+
+
+rule "Delete collectible"
+    salience 100
+    when
+        CollectibleRemovalEvent($pos : node) from entry-point gameEvents
+        $col : PositionedCollectible(position == $pos)
+    then
+        retract($col);
+end
+
+
+rule "Delete collectible with 0 distance"
+    salience 100
+    when
+        $col : PositionedCollectible(distance == 0)
+    then
+        retract($col);
+end
+
+rule "Recount distance from status"
+    salience 90
+    no-loop
+    when
+        Status($start : position)
+        $col : PositionedCollectible($end : position)
+    then
+        modify($col) {
+            setPath(tracker.getPath($start, $end));
+        }
+end

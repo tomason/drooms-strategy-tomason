@@ -1,4 +1,4 @@
-package org.drooms.strategy.tomason.stopwatch
+package org.drooms.strategy.tomason.path
 
 import org.slf4j.Logger
 import java.util.ArrayList
@@ -26,19 +26,23 @@ declare entry-point rewardEvents end
 declare entry-point playerEvents end
 
 
-rule "Start the clock"
-    salience Integer.MAX_VALUE
+rule "Add extra priority to straight moves"
+    salience 5
     when
         CurrentTurn($turn : number)
+        PastMove(turn == ($turn - 1), move != Move.STAY, $past : move)
+        $move : PriorityMove(move == $past)
     then
-        insert(new TimeHolder(System.currentTimeMillis(), $turn));
+        modify($move) {
+            addPriority(1000)
+        }
 end
 
-rule "Print the time"
-    salience Integer.MAX_VALUE
+rule "Insert priority move for every collectible"
     when
-        PastMove($turn : turn)
-        $holder : TimeHolder(turn == $turn)
+        Status($position : position)
+        $col : PositionedCollectible()
     then
-        logger.info("Time for turn {}: {} ms", $turn, $holder.getDelta(System.currentTimeMillis()));
+        insertLogical(new PriorityMove($position, $col.getFirstStep(),
+            Functions.getPriority($col.getCollectible().getPoints(), $col.getDistance())));
 end

@@ -1,0 +1,101 @@
+package org.drooms.strategy.tomason.danger
+
+import org.slf4j.Logger
+import java.util.ArrayList
+import java.util.Random
+
+import org.drooms.strategy.tomason.components.collectibles.*
+import org.drooms.strategy.tomason.components.collision.*;
+import org.drooms.strategy.tomason.components.history.*
+import org.drooms.strategy.tomason.components.status.*
+import org.drooms.strategy.tomason.components.*
+
+import org.drooms.api.*
+import org.drooms.impl.logic.*
+import org.drooms.impl.logic.facts.*
+import org.drooms.impl.logic.events.*
+
+import org.drools.runtime.rule.FactHandle
+import org.drools.runtime.rule.WorkingMemoryEntryPoint
+
+global Logger logger
+global PathTracker tracker
+
+declare entry-point gameEvents end
+declare entry-point rewardEvents end
+declare entry-point playerEvents end
+
+
+rule "Retract blocked ways"
+    salience 20
+    when
+        $move : PriorityMove(move != Move.STAY, $to : target)
+        Positioned(node == $to)
+    then
+        retract($move);
+end
+
+rule "Decrease priority of STAY move"
+    salience 10
+    when
+        Status(stayCount > 0, $stay : stayCount)
+        $move : PriorityMove(move == Move.STAY)
+    then
+        modify($move) {
+            addPriority(-10000 * $stay);
+        }
+end
+
+rule "Retract STAY move"
+    salience 10
+    when
+        $move : PriorityMove(move == Move.STAY)
+        GameProperty(name == GameProperty.Name.MAX_INACTIVE_TURNS, $max : value)
+        Status(stayCount == $max)
+    then
+        retract($move);
+end
+
+rule "Remove possible colisions to the left"
+    salience 10
+    when
+        $move : PriorityMove(move != Move.STAY, $x : target.x, $y : target.y)
+        Enemy(x == ($x - 1), y == $y)
+    then
+        modify($move) {
+            addPriority(-500000);
+        }
+end
+
+rule "Remove possible colisions to the right"
+    salience 10
+    when
+        $move : PriorityMove(move != Move.STAY, $x : target.x, $y : target.y)
+        Enemy(x == ($x + 1), y == $y)
+    then
+        modify($move) {
+            addPriority(-500000);
+        }
+end
+
+rule "Remove possible colisions to the up"
+    salience 10
+    when
+        $move : PriorityMove(move != Move.STAY, $x : target.x, $y : target.y)
+        Enemy(x == $x, y == ($y + 1))
+    then
+        modify($move) {
+            addPriority(-500000);
+        }
+end
+
+rule "Remove possible colisions to the down"
+    salience 10
+    when
+        $move : PriorityMove(move != Move.STAY, $x : target.x, $y : target.y)
+        Enemy(x == $x, y == ($y - 1))
+    then
+        modify($move) {
+            addPriority(-500000);
+        }
+end

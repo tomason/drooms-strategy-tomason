@@ -30,29 +30,13 @@ public class TomasonStrategy implements Strategy {
 
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder(conf);
 
-        if (!new PriorityPathRules().addToKnowledgeBuilder(kbuilder, cls)) {
-            System.err.println("Unable to add basic set of rules");
-        }
-        if (!new PathRules().addToKnowledgeBuilder(kbuilder, cls)) {
-            System.err.println("Unable to add path rules");
-        }
-        if (!new DangerAvoidanceRules().addToKnowledgeBuilder(kbuilder, cls)) {
-            System.err.println("Unable to add danger avoidance rules");
-        }
-        if (!new StatusRules().addToKnowledgeBuilder(kbuilder, cls)) {
-            System.err.println("Unable to add status rules");
-        }
-        if (!new CollectiblesRules().addToKnowledgeBuilder(kbuilder, cls)) {
-            System.err.println("Unable to add collectibles rules");
-        }
-
-        if (!new CollisionDetectionRules().addToKnowledgeBuilder(kbuilder, cls)) {
-            System.err.println("Unable to add collision detection rules");
-        }
-
-        if (!new StopWatchRules().addToKnowledgeBuilder(kbuilder, cls)) {
-            System.err.println("Unable to add stop watch rules");
-        }
+        new PriorityPathRules().addToKnowledgeBuilder(kbuilder, cls);
+        new PathRules().addToKnowledgeBuilder(kbuilder, cls);
+        new DangerAvoidanceRules().addToKnowledgeBuilder(kbuilder, cls);
+        new StatusRules().addToKnowledgeBuilder(kbuilder, cls);
+        new CollectiblesRules().addToKnowledgeBuilder(kbuilder, cls);
+        new CollisionDetectionRules().addToKnowledgeBuilder(kbuilder, cls);
+        new StopWatchRules().addToKnowledgeBuilder(kbuilder, cls);
 
         return kbuilder;
     }
