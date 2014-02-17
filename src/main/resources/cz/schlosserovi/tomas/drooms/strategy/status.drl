@@ -1,0 +1,81 @@
+package cz.schlosserovi.tomas.drooms.strategy
+
+import org.slf4j.Logger
+import java.util.ArrayList
+import java.util.Random
+
+import cz.schlosserovi.tomas.drooms.strategy.domain.collectibles.*
+import cz.schlosserovi.tomas.drooms.strategy.domain.collision.*;
+import cz.schlosserovi.tomas.drooms.strategy.domain.history.*
+import cz.schlosserovi.tomas.drooms.strategy.domain.status.*
+import cz.schlosserovi.tomas.drooms.strategy.domain.*
+
+import org.drooms.api.*
+import org.drooms.impl.logic.*
+import org.drooms.impl.logic.facts.*
+import org.drooms.impl.logic.events.*
+
+import org.kie.api.runtime.rule.FactHandle
+import org.kie.api.runtime.rule.EntryPoint
+
+global Logger logger
+global PathTracker tracker
+
+declare entry-point gameEvents end
+declare entry-point rewardEvents end
+declare entry-point playerEvents end
+
+
+rule "Insert current position fact if it is not available"
+    salience Integer.MAX_VALUE
+    when
+        not Status()
+    then
+        insert(new Status());
+end
+
+rule "Update current position"
+    salience Integer.MAX_VALUE
+    no-loop
+    when
+        CurrentPlayer($p : player)
+        PlayerMoveEvent(player == $p, $nodes : nodes, $dir : move) from entry-point playerEvents
+        $pos : Status()
+    then
+        $pos.setSnake($nodes);
+        $pos.setDirection($dir);
+        update($pos);
+end
+
+rule "Insert enemies"
+    salience 100
+    when
+        CurrentPlayer($p : player)
+        PlayerMoveEvent(player != $p, $player : player, $worm : nodes) from entry-point playerEvents
+        not Enemy(player == $player)
+    then
+        insert(new Enemy($player, $worm));
+end
+
+rule "Update enemies"
+    salience 100
+    when
+        $event : PlayerMoveEvent($worm : nodes, $player : player) from entry-point playerEvents
+        $e : Enemy(player == $player)
+    then
+        modify($e) {
+            setWorm($worm);
+        }
+        EntryPoint point = drools.getEntryPoint("playerEvents");
+        FactHandle handle = point.getFactHandle($event);
+        point.retract(handle);
+end
+
+rule "Remove dead enemies"
+    salience 99
+    when
+        PlayerDeathEvent($player : player) from entry-point playerEvents
+        $e : Enemy(player == $player)
+    then
+        retract($e);
+end
