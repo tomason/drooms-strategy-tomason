@@ -51,4 +51,29 @@
       </plugin>
     </plugins>
   </build>
+
+  <repositories>
+    <repository>
+      <id>drooms-public-repository</id>
+      <name>Repository for Drooms</name>
+      <url>http://nexus-drooms.rhcloud.com/nexus/content/groups/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <distributionManagement>
+    <repository>
+      <id>drooms-strategies-releases</id>
+      <url>http://nexus-drooms.rhcloud.com/nexus/content/repositories/strategies-releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>drooms-strategies-snapshots</id>
+      <url>http://nexus-drooms.rhcloud.com/nexus/content/repositories/strategies-snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
 </project>
